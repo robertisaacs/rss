@@ -1,0 +1,55 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model Feed {
+  id            Int       @id @default(autoincrement())
+  title         String
+  url           String    @unique
+  lastFetchedAt DateTime? @map("last_fetched_at")
+  articles      Article[]
+
+  @@map("feeds")
+}
+
+model Article {
+  id          Int           @id @default(autoincrement())
+  feedId      Int           @map("feed_id")
+  title       String
+  url         String        @unique
+  publishedAt DateTime      @map("published_at")
+  content     String
+  summary     String?
+  embedding   Bytes?
+  createdAt   DateTime      @default(now()) @map("created_at")
+  feed        Feed          @relation(fields: [feedId], references: [id])
+  tags        ArticleTag[]
+
+  @@map("articles")
+}
+
+model Tag {
+  id         Int          @id @default(autoincrement())
+  name       String       @unique
+  articles   ArticleTag[]
+
+  @@map("tags")
+}
+
+model ArticleTag {
+  articleId Int     @map("article_id")
+  tagId     Int     @map("tag_id")
+  article   Article @relation(fields: [articleId], references: [id])
+  tag       Tag     @relation(fields: [tagId], references: [id])
+
+  @@id([articleId, tagId])
+  @@map("article_tags")
+}
